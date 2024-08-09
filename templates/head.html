@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/head.css') }}">
+    <style>
+        .message {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 10px;
+            background-color: #f1f1f1;
+            max-width: 80%;
+            position: relative;
+        }
+        .user {
+            background-color: #e0e0e0;
+            align-self: flex-end;
+        }
+        .bot {
+            background-color: #4a148c; /* Dark purple, same as title bar */
+            color: #fff; /* White text for contrast */
+            align-self: flex-start;
+        }
+        .message a {
+            color: #1a0dab;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .message a:hover {
+            text-decoration: underline;
+        }
+        .link-bubble {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-title">ChatBot</div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Type your message...">
+            <button id="sendBtn">Send</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sendBtn = document.getElementById('sendBtn');
+            const userInput = document.getElementById('userInput');
+            const chatMessages = document.getElementById('chatMessages');
+
+            sendBtn.addEventListener('click', function() {
+                const userText = userInput.value;
+                if (userText.trim() !== '') {
+                    addMessage(userText, 'user');
+                    fetch(`/get?msg=${encodeURIComponent(userText)}`)
+                        .then(response => response.text())
+                        .then(data => {
+                            addMessage(data, 'bot');
+                        });
+                }
+                userInput.value = '';
+            });
+
+            function addMessage(text, sender) {
+                const message = document.createElement('div');
+                message.classList.add('message', sender);
+                message.innerHTML = convertUrlsToLinks(text); // Use innerHTML to allow HTML content
+                chatMessages.appendChild(message);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function convertUrlsToLinks(text) {
+                // Regular expression to match URLs
+                const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|$!:,.;]*[-A-Z0-9+&@#\/%=~_|$])/ig;
+                return text.replace(urlPattern, '<a href="$1" target="_blank" class="link-bubble">For More Info</a>');
+            }
+
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && userInput.value.trim() !== '') {
+                    sendBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
